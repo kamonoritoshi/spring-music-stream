@@ -64,7 +64,7 @@
         }
         .playlist-list {
             overflow-y: auto;
-            max-height: calc(100vh - 360px);
+            max-height: calc(100vh - 400px);
         }
         .playlist-list a {
             color: #b3b3b3;
@@ -283,15 +283,16 @@
         <div class="sidebar-menu">
             <a href="#" class="active" onclick="filterGenre('all'); return false;">
                 <i class="bi bi-house-door-fill"></i>
-                <span>Explore</span>
+                <span>Khám phá</span>
             </a>
         </div>
 
         <hr class="border-secondary my-1">
 
-        <div class="d-flex justify-content-between align-items-center px-2">
-            <span class="text-secondary small text-uppercase fw-bold">Your Library</span>
-            <button class="btn btn-sm btn-outline-light rounded-pill px-2 py-0" data-bs-toggle="modal" data-bs-target="#newPlaylistModal" title="Create Playlist">
+        <!-- Playlist Library section (ẩn/hiện theo đăng nhập) -->
+        <div id="playlistLibraryHeader" class="d-none justify-content-between align-items-center px-2">
+            <span class="text-secondary small text-uppercase fw-bold">Playlist Của Bạn</span>
+            <button class="btn btn-sm btn-outline-light rounded-pill px-2 py-0" data-bs-toggle="modal" data-bs-target="#newPlaylistModal" title="Tạo Playlist">
                 <i class="bi bi-plus-lg"></i>
             </button>
         </div>
@@ -301,9 +302,10 @@
         </div>
 
         <div class="mt-auto">
-            <button class="btn btn-success w-100 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#uploadSongModal">
+            <!-- Upload button: Chỉ hiển thị cho ROLE_ADMIN -->
+            <button id="sidebarUploadBtn" class="btn btn-success w-100 rounded-pill fw-bold d-none align-items-center justify-content-center gap-2 mb-2" data-bs-toggle="modal" data-bs-target="#uploadSongModal">
                 <i class="bi bi-cloud-arrow-up-fill"></i>
-                <span>Upload Song</span>
+                <span>Tải Nhạc Lên</span>
             </button>
         </div>
     </div>
@@ -317,11 +319,34 @@
                     <span class="input-group-text bg-dark border-secondary text-secondary">
                         <i class="bi bi-search"></i>
                     </span>
-                    <input type="text" id="searchInput" class="form-control bg-dark border-secondary text-light" placeholder="Search songs or artists...">
+                    <input type="text" id="searchInput" class="form-control bg-dark border-secondary text-light" placeholder="Tìm bài hát hoặc nghệ sĩ...">
                 </div>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-secondary p-2" id="currentViewTitle">All Songs</span>
+
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-secondary p-2" id="currentViewTitle">Tất Cả Bài Hát</span>
+
+                <!-- User Profile / Auth Area -->
+                <div id="authActionsGuest">
+                    <button class="btn btn-outline-light rounded-pill px-3 py-1 btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#authModal">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+                    </button>
+                </div>
+
+                <div id="authActionsUser" class="d-none align-items-center gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-dark border-secondary rounded-pill px-3 py-1 btn-sm dropdown-toggle text-light" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle text-success me-1"></i>
+                            <span id="navUsername">User</span>
+                            <span id="navRoleBadge" class="badge bg-primary ms-1" style="font-size: 0.65rem;">USER</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+                            <li><span class="dropdown-item-text text-secondary small" id="navFullName">Họ và tên</span></li>
+                            <li><hr class="dropdown-divider border-secondary"></li>
+                            <li><a class="dropdown-item text-danger small" href="#" onclick="handleLogout(event)"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -332,8 +357,8 @@
 
         <div id="noSongsMessage" class="text-center text-secondary py-5 d-none">
             <i class="bi bi-music-note-beamed fs-1 d-block mb-3"></i>
-            <h5>No songs found</h5>
-            <p class="small">Upload your first audio track or try another search.</p>
+            <h5>Không tìm thấy bài hát</h5>
+            <p class="small">Hãy tải bài hát mới lên hoặc thử tìm kiếm khác.</p>
         </div>
     </div>
 
@@ -343,7 +368,7 @@
         <div class="player-track-info">
             <img id="playerCover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Crect width='56' height='56' fill='%23282828'/%3E%3Ctext x='50%25' y='50%25' font-size='24' text-anchor='middle' alignment-baseline='middle' fill='%23555'%3E%E2%99%AA%3C/text%3E%3C/svg%3E" alt="Cover">
             <div class="text-truncate">
-                <div class="fw-semibold text-truncate small" id="playerTitle">Select a track</div>
+                <div class="fw-semibold text-truncate small" id="playerTitle">Chọn bài hát</div>
                 <div class="text-secondary text-truncate small" id="playerArtist">--</div>
             </div>
         </div>
@@ -351,19 +376,19 @@
         <!-- Center: Controls & Scrubber -->
         <div class="player-center">
             <div class="player-controls">
-                <button class="control-btn" id="btnShuffle" title="Shuffle" onclick="toggleShuffle()">
+                <button class="control-btn" id="btnShuffle" title="Phát ngẫu nhiên" onclick="toggleShuffle()">
                     <i class="bi bi-shuffle"></i>
                 </button>
-                <button class="control-btn" id="btnPrev" title="Previous" onclick="playPrevious()">
+                <button class="control-btn" id="btnPrev" title="Bài trước" onclick="playPrevious()">
                     <i class="bi bi-skip-start-fill"></i>
                 </button>
-                <button class="btn-play-main" id="btnPlayPause" title="Play" onclick="togglePlayPause()">
+                <button class="btn-play-main" id="btnPlayPause" title="Phát" onclick="togglePlayPause()">
                     <i class="bi bi-play-fill" id="playPauseIcon"></i>
                 </button>
-                <button class="control-btn" id="btnNext" title="Next" onclick="playNext()">
+                <button class="control-btn" id="btnNext" title="Bài tiếp" onclick="playNext()">
                     <i class="bi bi-skip-end-fill"></i>
                 </button>
-                <button class="control-btn" id="btnRepeat" title="Repeat" onclick="toggleRepeat()">
+                <button class="control-btn" id="btnRepeat" title="Lặp lại" onclick="toggleRepeat()">
                     <i class="bi bi-repeat"></i>
                 </button>
             </div>
@@ -383,49 +408,111 @@
         </div>
     </div>
 
-    <!-- Modal: Upload Song -->
+    <!-- Modal: Auth (Đăng nhập / Đăng ký) -->
+    <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content bg-dark border-secondary">
+                <div class="modal-header border-secondary pb-2">
+                    <ul class="nav nav-pills w-100" id="authTab" role="tablist">
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link active w-100 fw-bold" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-pane" type="button" role="tab">Đăng Nhập</button>
+                        </li>
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link w-100 fw-bold" id="register-tab" data-bs-toggle="pill" data-bs-target="#register-pane" type="button" role="tab">Đăng Ký</button>
+                        </li>
+                    </ul>
+                    <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <div id="authAlert" class="alert d-none small"></div>
+
+                    <div class="tab-content" id="authTabContent">
+                        <!-- Form Đăng Nhập -->
+                        <div class="tab-pane fade show active" id="login-pane" role="tabpanel">
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary">Tên đăng nhập</label>
+                                    <input type="text" id="loginUsername" class="form-control bg-dark border-secondary text-light" required placeholder="admin hoặc user">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary">Mật khẩu</label>
+                                    <input type="password" id="loginPassword" class="form-control bg-dark border-secondary text-light" required placeholder="admin123 hoặc user123">
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold mt-2" id="btnLoginSubmit">
+                                    Đăng Nhập
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Form Đăng Ký -->
+                        <div class="tab-pane fade" id="register-pane" role="tabpanel">
+                            <form id="registerForm">
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary">Tên đăng nhập *</label>
+                                    <input type="text" id="regUsername" class="form-control bg-dark border-secondary text-light" required placeholder="vd: soundlover">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary">Họ và tên</label>
+                                    <input type="text" id="regFullName" class="form-control bg-dark border-secondary text-light" placeholder="vd: Nguyễn Văn A">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary">Mật khẩu *</label>
+                                    <input type="password" id="regPassword" class="form-control bg-dark border-secondary text-light" required placeholder="Nhập mật khẩu">
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold mt-2" id="btnRegisterSubmit">
+                                    Tạo Tài Khoản
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Upload Song (Chỉ dành cho ADMIN) -->
     <div class="modal fade" id="uploadSongModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark border-secondary">
                 <div class="modal-header border-secondary">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-cloud-arrow-up text-success me-2"></i>Upload New Song</h5>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-cloud-arrow-up text-success me-2"></i>Tải Lên Bài Hát Mới</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="uploadForm">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label small text-secondary">Title *</label>
-                            <input type="text" name="title" class="form-control bg-dark border-secondary text-light" required placeholder="e.g. Bohemian Rhapsody">
+                            <label class="form-label small text-secondary">Tiêu đề bài hát *</label>
+                            <input type="text" name="title" class="form-control bg-dark border-secondary text-light" required placeholder="vd: Nắng Ấm Xa Dần">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-secondary">Artist *</label>
-                            <input type="text" name="artist" class="form-control bg-dark border-secondary text-light" required placeholder="e.g. Queen">
+                            <label class="form-label small text-secondary">Nghệ sĩ *</label>
+                            <input type="text" name="artist" class="form-control bg-dark border-secondary text-light" required placeholder="vd: Sơn Tùng M-TP">
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label small text-secondary">Album</label>
-                                <input type="text" name="album" class="form-control bg-dark border-secondary text-light" placeholder="e.g. A Night at the Opera">
+                                <input type="text" name="album" class="form-control bg-dark border-secondary text-light" placeholder="vd: Tuyển tập Pop">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small text-secondary">Genre</label>
-                                <input type="text" name="genre" class="form-control bg-dark border-secondary text-light" placeholder="e.g. Rock">
+                                <label class="form-label small text-secondary">Thể loại</label>
+                                <input type="text" name="genre" class="form-control bg-dark border-secondary text-light" placeholder="vd: Pop / Ballad">
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-secondary">Audio File (MP3, WAV, etc.) *</label>
+                            <label class="form-label small text-secondary">Tệp âm thanh (MP3, WAV, OGG) *</label>
                             <input type="file" name="audioFile" class="form-control bg-dark border-secondary text-light" accept="audio/*" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-secondary">Cover Image (Optional)</label>
+                            <label class="form-label small text-secondary">Ảnh bìa (Tùy chọn)</label>
                             <input type="file" name="coverFile" class="form-control bg-dark border-secondary text-light" accept="image/*">
                         </div>
                         <div id="uploadFeedback" class="alert d-none small"></div>
                     </div>
                     <div class="modal-footer border-secondary">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
                         <button type="submit" class="btn btn-success fw-bold px-4" id="btnSubmitUpload">
                             <span class="spinner-border spinner-border-sm me-2 d-none" id="uploadSpinner"></span>
-                            Upload
+                            Tải Lên
                         </button>
                     </div>
                 </form>
@@ -438,23 +525,23 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark border-secondary">
                 <div class="modal-header border-secondary">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-music-note-list text-success me-2"></i>New Playlist</h5>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-music-note-list text-success me-2"></i>Tạo Playlist Mới</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="createPlaylistForm">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label small text-secondary">Playlist Name *</label>
-                            <input type="text" id="playlistNameInput" class="form-control bg-dark border-secondary text-light" required placeholder="My Awesome Playlist">
+                            <label class="form-label small text-secondary">Tên Playlist *</label>
+                            <input type="text" id="playlistNameInput" class="form-control bg-dark border-secondary text-light" required placeholder="Playlist yêu thích...">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-secondary">Description</label>
-                            <textarea id="playlistDescInput" class="form-control bg-dark border-secondary text-light" rows="2" placeholder="Chill beats, energetic vibe..."></textarea>
+                            <label class="form-label small text-secondary">Mô tả</label>
+                            <textarea id="playlistDescInput" class="form-control bg-dark border-secondary text-light" rows="2" placeholder="Giai điệu thư giãn mỗi tối..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer border-secondary">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success fw-bold px-4">Create</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-success fw-bold px-4">Tạo Mới</button>
                     </div>
                 </form>
             </div>
@@ -467,6 +554,7 @@
     <!-- Vanilla JS Application Engine -->
     <script>
         // State
+        let currentUser = null;
         let allSongs = [];
         let allPlaylists = [];
         let queue = [];
@@ -495,14 +583,173 @@
         const btnRepeat = document.getElementById('btnRepeat');
 
         // Init
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuthStatus();
             loadSongs();
-            loadPlaylists();
             setupAudioEvents();
             setupUploadForm();
             setupPlaylistForm();
             setupSearch();
+            setupAuthForms();
         });
+
+        // ----------------- Auth State & UI -----------------
+        async function checkAuthStatus() {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (res.ok && res.status === 200) {
+                    currentUser = await res.json();
+                } else {
+                    currentUser = null;
+                }
+            } catch (err) {
+                currentUser = null;
+            }
+            updateAuthUI();
+            if (currentUser) {
+                loadPlaylists();
+            } else {
+                allPlaylists = [];
+                playlistsContainer.innerHTML = '<div class="text-secondary small px-2 py-1">Đăng nhập để xem playlist</div>';
+            }
+        }
+
+        function updateAuthUI() {
+            const guestBox = document.getElementById('authActionsGuest');
+            const userBox = document.getElementById('authActionsUser');
+            const playlistHeader = document.getElementById('playlistLibraryHeader');
+            const uploadBtn = document.getElementById('sidebarUploadBtn');
+
+            if (currentUser) {
+                guestBox.classList.add('d-none');
+                userBox.classList.remove('d-none');
+                userBox.classList.add('d-flex');
+
+                document.getElementById('navUsername').textContent = currentUser.username;
+                document.getElementById('navFullName').textContent = currentUser.fullName || currentUser.username;
+
+                const roleBadge = document.getElementById('navRoleBadge');
+                if (currentUser.role === 'ROLE_ADMIN') {
+                    roleBadge.textContent = 'ADMIN';
+                    roleBadge.className = 'badge bg-danger ms-1';
+                    uploadBtn.classList.remove('d-none');
+                    uploadBtn.classList.add('d-flex');
+                } else {
+                    roleBadge.textContent = 'USER';
+                    roleBadge.className = 'badge bg-primary ms-1';
+                    uploadBtn.classList.add('d-none');
+                    uploadBtn.classList.remove('d-flex');
+                }
+
+                playlistHeader.classList.remove('d-none');
+                playlistHeader.classList.add('d-flex');
+            } else {
+                guestBox.classList.remove('d-none');
+                userBox.classList.add('d-none');
+                userBox.classList.remove('d-flex');
+                uploadBtn.classList.add('d-none');
+                uploadBtn.classList.remove('d-flex');
+                playlistHeader.classList.add('d-none');
+                playlistHeader.classList.remove('d-flex');
+            }
+        }
+
+        function setupAuthForms() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const alertBox = document.getElementById('authAlert');
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                alertBox.className = 'alert d-none small';
+
+                const username = document.getElementById('loginUsername').value;
+                const password = document.getElementById('loginPassword').value;
+
+                try {
+                    const res = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    if (res.ok) {
+                        currentUser = await res.json();
+                        updateAuthUI();
+                        loadPlaylists();
+                        renderSongs(allSongs);
+                        bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
+                        loginForm.reset();
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        alertBox.className = 'alert alert-danger small';
+                        alertBox.textContent = err.message || 'Sai tên đăng nhập hoặc mật khẩu';
+                    }
+                } catch (err) {
+                    alertBox.className = 'alert alert-danger small';
+                    alertBox.textContent = 'Không thể kết nối đến máy chủ';
+                }
+            });
+
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                alertBox.className = 'alert d-none small';
+
+                const username = document.getElementById('regUsername').value;
+                const fullName = document.getElementById('regFullName').value;
+                const password = document.getElementById('regPassword').value;
+
+                try {
+                    const res = await fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, fullName, password })
+                    });
+
+                    if (res.ok) {
+                        alertBox.className = 'alert alert-success small';
+                        alertBox.textContent = 'Đăng ký thành công! Đang tự động đăng nhập...';
+
+                        // Auto login
+                        const loginRes = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username, password })
+                        });
+                        if (loginRes.ok) {
+                            currentUser = await loginRes.json();
+                            updateAuthUI();
+                            loadPlaylists();
+                            renderSongs(allSongs);
+                            setTimeout(() => {
+                                bootstrap.Modal.getInstance(document.getElementById('authModal')).hide();
+                                registerForm.reset();
+                                alertBox.className = 'alert d-none small';
+                            }, 800);
+                        }
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        alertBox.className = 'alert alert-danger small';
+                        alertBox.textContent = err.message || 'Đăng ký thất bại';
+                    }
+                } catch (err) {
+                    alertBox.className = 'alert alert-danger small';
+                    alertBox.textContent = 'Lỗi hệ thống khi đăng ký';
+                }
+            });
+        }
+
+        async function handleLogout(e) {
+            e.preventDefault();
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+            } catch (err) {}
+            currentUser = null;
+            updateAuthUI();
+            playlistsContainer.innerHTML = '<div class="text-secondary small px-2 py-1">Đăng nhập để xem playlist</div>';
+            allPlaylists = [];
+            filterGenre('all');
+        }
 
         // ----------------- Fetch & Render Songs -----------------
         async function loadSongs(query = '') {
@@ -529,23 +776,27 @@
                 const col = document.createElement('div');
                 col.className = 'col';
 
-                const coverSrc = song.coverPath ? song.coverPath : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23282828'/%3E%3Ctext x='50%25' y='50%25' font-size='60' text-anchor='middle' alignment-baseline='middle' fill='%23444'%3E%E2%99%AA%3C/text%3E%3C/svg%3E";
+                const coverSrc = song.coverUrl || song.coverPath || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23282828'/%3E%3Ctext x='50%25' y='50%25' font-size='60' text-anchor='middle' alignment-baseline='middle' fill='%23444'%3E%E2%99%AA%3C/text%3E%3C/svg%3E";
 
-                // Build playlist dropdown options
+                // Playlist options for dropdown
                 let playlistOptions = '';
-                if (allPlaylists.length > 0) {
-                    playlistOptions = allPlaylists.map(p => `
-                        <li><a class="dropdown-item small" href="#" onclick="addToPlaylist(event, ${p.id}, ${song.id})">${escapeHtml(p.name)}</a></li>
-                    `).join('');
+                if (currentUser) {
+                    if (allPlaylists.length > 0) {
+                        playlistOptions = allPlaylists.map(p => `
+                            <li><a class="dropdown-item small" href="#" onclick="addToPlaylist(event, ${p.id}, ${song.id})">${escapeHtml(p.name)}</a></li>
+                        `).join('');
+                    } else {
+                        playlistOptions = '<li><span class="dropdown-item-text text-secondary small">Chưa có playlist nào</span></li>';
+                    }
                 } else {
-                    playlistOptions = '<li><span class="dropdown-item-text text-secondary small">No playlists yet</span></li>';
+                    playlistOptions = '<li><a class="dropdown-item small text-warning" href="#" data-bs-toggle="modal" data-bs-target="#authModal">Đăng nhập để thêm</a></li>';
                 }
 
                 col.innerHTML = `
                     <div class="song-card h-100 d-flex flex-direction-column flex-column" onclick="playSongById(${song.id})">
                         <div class="song-cover-wrapper">
                             <img src="${coverSrc}" class="song-cover" alt="${escapeHtml(song.title)}">
-                            <button class="play-btn-overlay" title="Play">
+                            <button class="play-btn-overlay" title="Phát">
                                 <i class="bi bi-play-fill"></i>
                             </button>
                         </div>
@@ -556,11 +807,11 @@
                                 <i class="bi bi-play-circle me-1"></i>${song.playCount || 0}
                             </span>
                             <div class="dropdown" onclick="event.stopPropagation()">
-                                <button class="btn btn-sm btn-link text-secondary p-0 text-decoration-none" data-bs-toggle="dropdown" title="Add to Playlist">
+                                <button class="btn btn-sm btn-link text-secondary p-0 text-decoration-none" data-bs-toggle="dropdown" title="Thêm vào Playlist">
                                     <i class="bi bi-three-dots-vertical fs-6"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
-                                    <li><h6 class="dropdown-header small text-uppercase">Add to Playlist</h6></li>
+                                    <li><h6 class="dropdown-header small text-uppercase">Thêm vào Playlist</h6></li>
                                     ${playlistOptions}
                                 </ul>
                             </div>
@@ -573,12 +824,17 @@
 
         // ----------------- Fetch & Render Playlists -----------------
         async function loadPlaylists() {
+            if (!currentUser) return;
             try {
                 const res = await fetch('/api/playlists');
+                if (res.status === 401) {
+                    currentUser = null;
+                    updateAuthUI();
+                    return;
+                }
                 if (!res.ok) throw new Error('Failed to load playlists');
                 allPlaylists = await res.json();
                 renderPlaylists(allPlaylists);
-                // Also re-render songs dropdowns if songs are already loaded
                 if (allSongs.length > 0) {
                     renderSongs(allSongs);
                 }
@@ -590,7 +846,7 @@
         function renderPlaylists(playlists) {
             playlistsContainer.innerHTML = '';
             if (!playlists || playlists.length === 0) {
-                playlistsContainer.innerHTML = '<div class="text-secondary small px-2 py-1">No playlists</div>';
+                playlistsContainer.innerHTML = '<div class="text-secondary small px-2 py-1">Chưa có playlist</div>';
                 return;
             }
 
@@ -613,32 +869,36 @@
         }
 
         function filterGenre(genre) {
-            document.getElementById('currentViewTitle').textContent = 'All Songs';
+            document.getElementById('currentViewTitle').textContent = 'Tất Cả Bài Hát';
             loadSongs();
         }
 
         async function addToPlaylist(e, playlistId, songId) {
             e.preventDefault();
             e.stopPropagation();
+            if (!currentUser) {
+                const authModal = new bootstrap.Modal(document.getElementById('authModal'));
+                authModal.show();
+                return;
+            }
             try {
                 const res = await fetch(`/api/playlists/${playlistId}/songs/${songId}`, {
                     method: 'POST'
                 });
                 if (res.ok) {
-                    alert('Song added to playlist!');
+                    alert('Đã thêm bài hát vào playlist thành công!');
                     loadPlaylists();
                 } else {
-                    alert('Could not add song to playlist.');
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.message || 'Không thể thêm bài hát vào playlist.');
                 }
             } catch (err) {
-                console.error(err);
-                alert('Network error adding song to playlist.');
+                alert('Lỗi kết nối khi thêm bài hát.');
             }
         }
 
         // ----------------- Player Engine -----------------
         function playSongById(songId) {
-            // Re-sync queue with currently visible songs
             queue = [...allSongs];
             currentIndex = queue.findIndex(s => s.id === songId);
             if (currentIndex !== -1) {
@@ -654,8 +914,9 @@
             // Update bottom bar
             playerTitle.textContent = song.title;
             playerArtist.textContent = song.artist;
-            if (song.coverPath) {
-                playerCover.src = song.coverPath;
+            const cover = song.coverUrl || song.coverPath;
+            if (cover) {
+                playerCover.src = cover;
             } else {
                 playerCover.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Crect width='56' height='56' fill='%23282828'/%3E%3Ctext x='50%25' y='50%25' font-size='24' text-anchor='middle' alignment-baseline='middle' fill='%23555'%3E%E2%99%AA%3C/text%3E%3C/svg%3E";
             }
@@ -822,7 +1083,7 @@
 
                     if (res.ok) {
                         feedback.className = 'alert alert-success small';
-                        feedback.textContent = 'Song uploaded successfully!';
+                        feedback.textContent = 'Tải nhạc lên thành công!';
                         form.reset();
                         setTimeout(() => {
                             const modal = bootstrap.Modal.getInstance(document.getElementById('uploadSongModal'));
@@ -831,14 +1092,13 @@
                             loadSongs();
                         }, 1000);
                     } else {
-                        const errText = await res.text();
+                        const err = await res.json().catch(() => ({}));
                         feedback.className = 'alert alert-danger small';
-                        feedback.textContent = 'Upload failed: ' + errText;
+                        feedback.textContent = err.message || 'Lỗi tải nhạc lên';
                     }
                 } catch (err) {
-                    console.error('Error uploading song:', err);
                     feedback.className = 'alert alert-danger small';
-                    feedback.textContent = 'Network or server error during upload.';
+                    feedback.textContent = 'Lỗi kết nối máy chủ.';
                 } finally {
                     spinner.classList.add('d-none');
                     btnSubmit.disabled = false;
@@ -867,7 +1127,8 @@
                         if (modal) modal.hide();
                         loadPlaylists();
                     } else {
-                        alert('Failed to create playlist');
+                        const err = await res.json().catch(() => ({}));
+                        alert(err.message || 'Không thể tạo playlist');
                     }
                 } catch (err) {
                     console.error('Error creating playlist:', err);

@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface PlaylistService {
     List<PlaylistResponse> getAllPlaylists();
+    List<PlaylistResponse> getMyPlaylists();
     PlaylistResponse createPlaylist(PlaylistRequest request);
     PlaylistResponse addSongToPlaylist(Long playlistId, Long songId);
     PlaylistResponse removeSongFromPlaylist(Long playlistId, Long songId);

@@ -22,7 +22,7 @@ public class PlaylistApiController {
 
     @GetMapping
     public ResponseEntity<List<PlaylistResponse>> getAllPlaylists() {
-        return ResponseEntity.ok(playlistService.getAllPlaylists());
+        return ResponseEntity.ok(playlistService.getMyPlaylists());
     }
 
     @PostMapping
