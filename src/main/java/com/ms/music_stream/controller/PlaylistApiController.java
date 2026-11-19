@@ -1,14 +1,12 @@
 package com.ms.music_stream.controller;
 
-import com.ms.music_stream.model.Playlist;
-import com.ms.music_stream.model.Song;
-import com.ms.music_stream.repository.PlaylistRepository;
-import com.ms.music_stream.repository.SongRepository;
+import com.ms.music_stream.dto.PlaylistRequest;
+import com.ms.music_stream.dto.PlaylistResponse;
+import com.ms.music_stream.service.PlaylistService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -16,46 +14,32 @@ import java.util.List;
 @RequestMapping("/api/playlists")
 public class PlaylistApiController {
 
-    private final PlaylistRepository playlistRepository;
-    private final SongRepository songRepository;
+    private final PlaylistService playlistService;
 
-    public PlaylistApiController(PlaylistRepository playlistRepository, SongRepository songRepository) {
-        this.playlistRepository = playlistRepository;
-        this.songRepository = songRepository;
+    public PlaylistApiController(PlaylistService playlistService) {
+        this.playlistService = playlistService;
     }
 
     @GetMapping
-    public ResponseEntity<List<Playlist>> getAllPlaylists() {
-        return ResponseEntity.ok(playlistRepository.findAll());
+    public ResponseEntity<List<PlaylistResponse>> getAllPlaylists() {
+        return ResponseEntity.ok(playlistService.getAllPlaylists());
     }
 
     @PostMapping
-    public ResponseEntity<Playlist> createPlaylist(@Valid @RequestBody Playlist playlist) {
-        Playlist saved = playlistRepository.save(playlist);
+    public ResponseEntity<PlaylistResponse> createPlaylist(@Valid @RequestBody PlaylistRequest request) {
+        PlaylistResponse saved = playlistService.createPlaylist(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PostMapping("/{playlistId}/songs/{songId}")
-    public ResponseEntity<Playlist> addSongToPlaylist(@PathVariable Long playlistId, @PathVariable Long songId) {
-        Playlist playlist = playlistRepository.findById(playlistId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Playlist not found with id: " + playlistId));
-        Song song = songRepository.findById(songId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Song not found with id: " + songId));
-
-        playlist.getSongs().add(song);
-        Playlist updated = playlistRepository.save(playlist);
+    public ResponseEntity<PlaylistResponse> addSongToPlaylist(@PathVariable Long playlistId, @PathVariable Long songId) {
+        PlaylistResponse updated = playlistService.addSongToPlaylist(playlistId, songId);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{playlistId}/songs/{songId}")
-    public ResponseEntity<Playlist> removeSongFromPlaylist(@PathVariable Long playlistId, @PathVariable Long songId) {
-        Playlist playlist = playlistRepository.findById(playlistId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Playlist not found with id: " + playlistId));
-        Song song = songRepository.findById(songId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Song not found with id: " + songId));
-
-        playlist.getSongs().remove(song);
-        Playlist updated = playlistRepository.save(playlist);
+    public ResponseEntity<PlaylistResponse> removeSongFromPlaylist(@PathVariable Long playlistId, @PathVariable Long songId) {
+        PlaylistResponse updated = playlistService.removeSongFromPlaylist(playlistId, songId);
         return ResponseEntity.ok(updated);
     }
 }
